@@ -47,6 +47,12 @@
     <Compile Include="InvokeJenkinsJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libJenkinsAccess\libJenkinsAccess.csproj">
+      <Project>{c914fce5-046b-4e3f-9987-c5c6ce7a3e87}</Project>
+      <Name>libJenkinsAccess</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

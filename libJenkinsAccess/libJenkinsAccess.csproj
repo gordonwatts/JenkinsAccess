@@ -53,6 +53,7 @@
     <Compile Include="EndPoint\JenkinsServer.cs" />
     <Compile Include="EndPoint\WebClientAccess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StartJob.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

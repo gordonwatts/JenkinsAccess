@@ -1,6 +1,7 @@
 ﻿using CredentialManagement;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -37,6 +38,23 @@ namespace JenkinsAccess.EndPoint
             {
                 throw new ArgumentException($"Jenkins Server seems to require log-in credentials, but we did not find any on this machine that worked. Create a generic credential with '{u.Host}' as the target.", e);
             }
+        }
+
+        /// <summary>
+        /// Post to the Uri directly. We will crash if something goes wrong.
+        /// </summary>
+        /// <param name="jobUri"></param>
+        /// <returns></returns>
+        internal async Task Post (Uri jobUri, IDictionary<string,string> parameters)
+        {
+            var wc = PreparseWebClient(jobUri);
+
+            var nv = new System.Collections.Specialized.NameValueCollection();
+            foreach (var nvpair in parameters)
+            {
+                nv.Add(nvpair.Key, nvpair.Value);
+            }
+            var result = await wc.UploadValuesTaskAsync(jobUri, nv);
         }
 
         /// <summary>
