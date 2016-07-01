@@ -54,11 +54,11 @@ namespace PSJenkinsAccess
 
             // Next, redo the min and max
             var minJob = minimumJobNumber
-                .Some(async j => await NormalizeJobIndex(j, currentJob))
-                .None(async () => await NormalizeJobIndex(-50, currentJob));
+                .Some(j => NormalizeJobIndex(j, currentJob))
+                .None(() => NormalizeJobIndex(-50, currentJob));
             var maxJob = maximumJobNumber
-                .Some(async j => await NormalizeJobIndex(j, currentJob))
-                .None(async () => await NormalizeJobIndex(0, currentJob));
+                .Some(j => NormalizeJobIndex(j, currentJob))
+                .None(() => NormalizeJobIndex(0, currentJob));
 
             // Return an enumerable which will follow the jobs.
             var aminJob = await minJob;

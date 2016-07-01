@@ -37,6 +37,7 @@ namespace JenkinsAccess.EndPoint
         /// <returns></returns>
         public async Task<Either<Exception,int>> GetCurrentJobNumber()
         {
+            // TODO: See https://github.com/louthy/language-ext/issues/101 for cleaning this up.
             // Build the job URI, which will then return the JSON.
             var jk = GetJobURIStem()
                 .Some(async v => await _server.FetchJSON<JenkinsJob>(v))
