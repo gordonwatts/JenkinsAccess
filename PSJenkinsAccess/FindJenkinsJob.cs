@@ -6,6 +6,7 @@ using System.Linq;
 using System.Management.Automation;
 using System.Text;
 using System.Threading.Tasks;
+using static JenkinsAccess.EndPoint.JenkinsProject;
 using static LanguageExt.Prelude;
 
 namespace PSJenkinsAccess
@@ -34,8 +35,10 @@ namespace PSJenkinsAccess
 
             // Next, loop over each item and fetch what we need. Or throw if something bad bubbled up.
             r
-                .Right(l => l.Iter(jNumber => WriteObject(jNumber)))
-                .Left(e => { throw e; });
+                .Right(lst => lst.Select(jid => GetJenkinsProject().GetJobBuildInfo(jid)))
+                .Left(e => { throw e; })
+                .Iter(i => i.Result
+                            .Match(Right: ji => WriteObject(ji), Left: e => { throw e; }));
 
             // Make sure that PS does its thing.
             base.ProcessRecord();

@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="ArtifactAccess.cs" />
     <Compile Include="Data\JenkinsDomain.cs" />
+    <Compile Include="Data\JenkinsJob.cs" />
     <Compile Include="EndPoint\JenkinsProject.cs" />
     <Compile Include="EndPoint\JenkinsServer.cs" />
     <Compile Include="EndPoint\WebClientAccess.cs" />

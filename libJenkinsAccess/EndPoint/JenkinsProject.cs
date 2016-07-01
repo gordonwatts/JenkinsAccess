@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 using LanguageExt;
 using static LanguageExt.Prelude;
 using static JenkinsAccess.Data.JenkinsDomain;
+using JenkinsAccess.Data;
+using System.Collections;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace JenkinsAccess.EndPoint
 {
@@ -49,6 +53,116 @@ namespace JenkinsAccess.EndPoint
                 .Map(j => j.lastBuild.number);
 
             return r;
+        }
+
+        /// <summary>
+        /// Fetch from the server the info needed.
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Look at the cache first
+        /// </remarks>
+        public async Task<Either<Exception, JenkinsJobBuildInfo>> GetJobBuildInfo(int jobid)
+        {
+            // Fetch the raw information.
+            var jinfo = (await LoadFromCache(jobid))
+                .Some(jvi => Right<Exception, JenkinsJobBuild>(jvi).AsTask())
+                .None(() => GetJobURIStem()
+                    .Some(v => _server.FetchJSON<JenkinsJobBuild>(new Uri($"{v.AbsoluteUri}/{jobid}")))
+                    .None(() => Left<Exception, JenkinsJobBuild>(new InvalidOperationException("No job uri - should never happen.")).AsTask())
+                );
+            var r = await jinfo;
+            await r.MatchAsync(async jvi => await SaveToCache(jvi), e => new JenkinsJobBuild().AsTask());
+
+            // Convert it to our summary information
+            return r
+                .Map(jvi => new JenkinsJobBuildInfo() {
+                    Id = jvi.number,
+                    IsBuilding = jvi.building,
+                    Parameters = ConvertParameters(jvi.actions),
+                    JobUrl = new Uri(jvi.url)
+                });
+        }
+
+        /// <summary>
+        /// Convert the Jenkins parameters to something more resonable.
+        /// </summary>
+        /// <param name="actions"></param>
+        /// <returns></returns>
+        private Dictionary<string, string> ConvertParameters(List<Data.Action> actions)
+        {
+            return actions
+                .Where(a => a.parameters != null)
+                .SelectMany(a => a.parameters)
+                .ToDictionary(p => p.name, p => p.value);
+        }
+
+        /// <summary>
+        /// See if we can load a job item from the cache.
+        /// </summary>
+        /// <param name="jobId"></param>
+        /// <returns></returns>
+        private async Task<Option<JenkinsJobBuild>> LoadFromCache(int jobId)
+        {
+            var f = GetCacheFile(jobId);
+            if (!f.Exists)
+            {
+                return None;
+            }
+
+            using (var rdr = f.OpenText())
+            {
+                var obj = JsonConvert.DeserializeObject<JenkinsJobBuild>(await rdr.ReadToEndAsync());
+                return Some(obj);
+            }
+        }
+
+        /// <summary>
+        /// Write an item to cache if it is done building.
+        /// </summary>
+        /// <param name="bld"></param>
+        /// <returns></returns>
+        private async Task<JenkinsJobBuild> SaveToCache(JenkinsJobBuild bld)
+        {
+            // If building, then don't cache.
+            if (bld.building)
+            {
+                return bld;
+            }
+
+            // Create key, and write out.
+            using (var wrtr = GetCacheFile(bld.number).CreateText())
+            {
+                await wrtr.WriteAsync(JsonConvert.SerializeObject(bld));
+            }
+
+            return bld;
+        }
+
+        private FileInfo GetCacheFile(int number)
+        {
+            var d = new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{_jobName}/{number}-status.json"));
+            if (!d.Directory.Exists)
+            {
+                d.Directory.Create();
+            }
+            return d;
+        }
+
+        /// <summary>
+        /// Info for a job
+        /// </summary>
+        public class JenkinsJobBuildInfo
+        {
+            public int Id { get; internal set; }
+            public bool IsBuilding { get; internal set; }
+
+            /// <summary>
+            /// Url pointing to the job.
+            /// </summary>
+            public Uri JobUrl { get; internal set; }
+            public Dictionary<string, string> Parameters { get; internal set; }
         }
 
         /// <summary>
