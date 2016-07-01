@@ -10,14 +10,8 @@ using System.Collections;
 namespace PSJenkinsAccess
 {
     [Cmdlet(VerbsLifecycle.Invoke, "JenkinsJob")]
-    public class InvokeJenkinsJob : PSCmdlet
+    public class InvokeJenkinsJob : BaseJenkinsJob
     {
-        /// <summary>
-        /// The uri of the job.
-        /// </summary>
-        [Parameter(Mandatory = true, Position =1, HelpMessage = "The URL of the Jenkins job - visit the job page on the web and use that URL.")]
-        public string JobUri { get; set; }
-
         [Parameter(Mandatory = false, Position = 2, ValueFromPipeline = true)]
         public Hashtable ParameterValues { get; set; }
 

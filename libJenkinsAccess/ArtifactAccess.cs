@@ -29,6 +29,7 @@ namespace JenkinsAccess
         /// Files are stored in the user's temp directory. Deleting them at anytime is fine (as long as they aren't in direct use!!),
         /// as they will be automatically downloaded the next time a query is made.
         /// </remarks>
+#if false
         static public async Task<FileInfo> GetArtifactFile(Uri artifactURI)
         {
             // Fetch access to the server
@@ -54,5 +55,6 @@ namespace JenkinsAccess
             }
             return location;
         }
+#endif
     }
 }

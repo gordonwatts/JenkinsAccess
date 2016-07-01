@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LanguageExt;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,63 +7,63 @@ using static JenkinsAccess.Data.JenkinsDomain;
 
 namespace JenkinsAccess.EndPoint
 {
-    class JenkinsServer
+    public class JenkinsServer
     {
-        /// <summary>
-        /// Info on an artifact
-        /// </summary>
-        public class Info
-        {
-            public string JobName;
-            public string ArtifactName;
-            public int BuildNumber;
-        }
-
         /// <summary>
         /// Access to Jenkins REST API
         /// </summary>
         Lazy<WebClientAccess> _JenkinsEndPoint = new Lazy<WebClientAccess>(() => new WebClientAccess());
 
-        Uri _artifactURI;
+        /// <summary>
+        /// Uri of server.
+        /// </summary>
+        Uri _serverUri;
 
-        string _jobName;
-        string _buildName;
-        string _artifactName;
-
+        /// <summary>
+        /// Get the server address we are looking at
+        /// </summary>
+        /// <param name="url"></param>
         public JenkinsServer(Uri url)
         {
-            _artifactURI = url;
-            var segments = _artifactURI.Segments;
-
-            // Get the job and artifact.
-            var artifactInfo = segments.SkipWhile(s => s != "job/").Skip(1).Select(s => s.Trim('/')).ToArray();
-            if (artifactInfo.Length != 4 && artifactInfo[2] == "artifact")
-            {
-                throw new ArgumentException($"The Jenkins artifact URI '{url}' is not in a format I recognize (.../jobname/build/artifact/artifact-name)");
-            }
-            _jobName = artifactInfo[0];
-            _buildName = artifactInfo[1];
-            _artifactName = artifactInfo[3];
+            var goodSegment = url.Segments.SkipWhile(s => s != "job/").Count();
+            var backup = Enumerable.Range(0, goodSegment).Aggregate("", (a, v) => a + "../");
+            _serverUri = new Uri(url, backup);
         }
 
         /// <summary>
-        /// Get everything setup. Some of this setup may require going up to the server.
+        /// Return a new Uri.
         /// </summary>
+        /// <param name="option"></param>
         /// <returns></returns>
-        private async Task Init()
+        internal Uri GetUriWithStem(string stem)
         {
-            // The only key here is if the build number is not determined at this point.
-            if (_buildName == "lastSuccessfulBuild")
+            return new Uri(_serverUri, stem);
+        }
+
+        /// <summary>
+        /// Return the object requested from the uri from the jenkins server, or return the error.
+        /// Don't fail, just return it - let the folks upstairs decide how to deal with the error.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        internal async Task<Either<Exception,T>> FetchJSON<T>(Uri uri)
+        {
+            try
             {
-                _buildName = (await GetLastSuccessfulBuild()).ToString();
+                return await _JenkinsEndPoint.Value.FetchJSON<T>(uri);
+            } catch(Exception e)
+            {
+                return e;
             }
         }
 
+#if false
         /// <summary>
         /// Fetch the last successful build.
         /// </summary>
         /// <returns></returns>
-        private async Task<int> GetLastSuccessfulBuild()
+        public async Task<int> GetLastSuccessfulBuild()
         {
             // Build the job URI, which will then return the JSON.
             var jobURIStem = GetJobURIStem();
@@ -113,5 +114,6 @@ namespace JenkinsAccess.EndPoint
 
             await _JenkinsEndPoint.Value.DownloadFile(artifactUri, destination);
         }
+#endif 
     }
 }
