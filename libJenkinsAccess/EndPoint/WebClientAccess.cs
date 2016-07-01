@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using LanguageExt;
 
 namespace JenkinsAccess.EndPoint
 {
@@ -37,6 +38,24 @@ namespace JenkinsAccess.EndPoint
             catch (WebException e) when (e.Message.Contains("Forbidden"))
             {
                 throw new ArgumentException($"Jenkins Server seems to require log-in credentials, but we did not find any on this machine that worked. Create a generic credential with '{u.Host}' as the target.", e);
+            }
+        }
+
+        /// <summary>
+        /// Fetch just data as a string
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        internal async Task<string> FetchData(Uri uri)
+        {
+            try
+            {
+                var wc = PreparseWebClient(uri);
+                return await wc.DownloadStringTaskAsync(uri);
+            }
+            catch (WebException e) when (e.Message.Contains("Forbidden"))
+            {
+                throw new ArgumentException($"Jenkins Server seems to require log-in credentials, but we did not find any on this machine that worked. Create a generic credential with '{uri.Host}' as the target.", e);
             }
         }
 

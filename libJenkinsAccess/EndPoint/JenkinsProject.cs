@@ -55,6 +55,50 @@ namespace JenkinsAccess.EndPoint
             return r;
         }
 
+        #region Log File
+        /// <summary>
+        /// Return a string that is the total contents of the log file. Could be large!
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <returns></returns>
+        public async Task<Either<Exception, string>> GetJobLogfile(int jobid)
+        {
+            var jinfo = (await LogFileLoadFromCache(jobid))
+                .Some(data => Right<Exception, string>(data).AsTask())
+                .None(() => GetJobURIStem()
+                            .Some(v => _server.FetchData(new Uri($"{v.AbsoluteUri}/{jobid}/consoleText")))
+                            .None(() => Left<Exception, string>(new InvalidOperationException("No job url - should never happen.")).AsTask())
+                            );
+
+            var r = await jinfo;
+            await r.MatchAsync(rdata => LogFileSaveToCache(jobid, rdata), e => "hi".AsTask());
+            return r;
+        }
+
+
+        /// <summary>
+        /// Save a file to cache
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <param name="r"></param>
+        private async Task<string> LogFileSaveToCache(int jobid, string r)
+        {
+            await SaveCacheFile(jobid, "logfile", r);
+            return r;
+        }
+
+        /// <summary>
+        /// Load a log file from the cache
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <returns></returns>
+        private Task<Option<string>> LogFileLoadFromCache(int jobid)
+        {
+            return LoadCacheFile(jobid, "logfile");
+        }
+        #endregion
+
+        #region BuildInfo cache file
         /// <summary>
         /// Fetch from the server the info needed.
         /// </summary>
@@ -66,18 +110,19 @@ namespace JenkinsAccess.EndPoint
         public async Task<Either<Exception, JenkinsJobBuildInfo>> GetJobBuildInfo(int jobid)
         {
             // Fetch the raw information.
-            var jinfo = (await LoadFromCache(jobid))
+            var jinfo = (await BuildInfoLoadFromCache(jobid))
                 .Some(jvi => Right<Exception, JenkinsJobBuild>(jvi).AsTask())
                 .None(() => GetJobURIStem()
                     .Some(v => _server.FetchJSON<JenkinsJobBuild>(new Uri($"{v.AbsoluteUri}/{jobid}")))
                     .None(() => Left<Exception, JenkinsJobBuild>(new InvalidOperationException("No job uri - should never happen.")).AsTask())
                 );
             var r = await jinfo;
-            await r.MatchAsync(async jvi => await SaveToCache(jvi), e => new JenkinsJobBuild().AsTask());
+            await r.MatchAsync(async jvi => await BuildInfoSaveToCache(jvi), e => new JenkinsJobBuild().AsTask());
 
             // Convert it to our summary information
             return r
-                .Map(jvi => new JenkinsJobBuildInfo() {
+                .Map(jvi => new JenkinsJobBuildInfo()
+                {
                     Id = jvi.number,
                     IsBuilding = jvi.building,
                     Parameters = ConvertParameters(jvi.actions),
@@ -103,19 +148,10 @@ namespace JenkinsAccess.EndPoint
         /// </summary>
         /// <param name="jobId"></param>
         /// <returns></returns>
-        private async Task<Option<JenkinsJobBuild>> LoadFromCache(int jobId)
+        private async Task<Option<JenkinsJobBuild>> BuildInfoLoadFromCache(int jobId)
         {
-            var f = GetCacheFile(jobId);
-            if (!f.Exists)
-            {
-                return None;
-            }
-
-            using (var rdr = f.OpenText())
-            {
-                var obj = JsonConvert.DeserializeObject<JenkinsJobBuild>(await rdr.ReadToEndAsync());
-                return Some(obj);
-            }
+            return (await LoadCacheFile(jobId, "buildinfo"))
+                .Map(s => JsonConvert.DeserializeObject<JenkinsJobBuild>(s));
         }
 
         /// <summary>
@@ -123,7 +159,7 @@ namespace JenkinsAccess.EndPoint
         /// </summary>
         /// <param name="bld"></param>
         /// <returns></returns>
-        private async Task<JenkinsJobBuild> SaveToCache(JenkinsJobBuild bld)
+        private async Task<JenkinsJobBuild> BuildInfoSaveToCache(JenkinsJobBuild bld)
         {
             // If building, then don't cache.
             if (bld.building)
@@ -131,24 +167,65 @@ namespace JenkinsAccess.EndPoint
                 return bld;
             }
 
-            // Create key, and write out.
-            using (var wrtr = GetCacheFile(bld.number).CreateText())
-            {
-                await wrtr.WriteAsync(JsonConvert.SerializeObject(bld));
-            }
-
+            await SaveCacheFile(bld.number, "buildinfo", JsonConvert.SerializeObject(bld));
             return bld;
         }
+        #endregion
 
-        private FileInfo GetCacheFile(int number)
+        #region Lowlevel Cache Routines
+        /// <summary>
+        /// Load a cache file from text. Return None if there is no text file.
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <param name="cacheFilename"></param>
+        /// <returns></returns>
+        private async Task<Option<string>> LoadCacheFile(int jobid, string cacheFilename)
         {
-            var d = new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{_jobName}/{number}-status.json"));
+            // See if we have a cache hit.
+            var f = GetCacheFilename(jobid, cacheFilename);
+            if (!f.Exists)
+            {
+                return None;
+            }
+
+            // Read it back.
+            using (var r = f.OpenText())
+            {
+                return Some(await r.ReadToEndAsync());
+            }
+        }
+
+        /// <summary>
+        /// Generic method to save a text file in our cache.
+        /// </summary>
+        /// <param name="jobid"></param>
+        /// <param name="cacheFileName"></param>
+        /// <param name="dataToCache"></param>
+        /// <returns></returns>
+        private async Task SaveCacheFile(int jobid, string cacheFileName, string dataToCache)
+        {
+            using (var wrtr = GetCacheFilename(jobid, cacheFileName).CreateText())
+            {
+                await wrtr.WriteAsync(dataToCache);
+            }
+        }
+
+        /// <summary>
+        /// Generate the filename for a cache file for a job. Make sure the directory exists first.
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="cacheFileName"></param>
+        /// <returns></returns>
+        private FileInfo GetCacheFilename(int number, string cacheFileName)
+        {
+            var d = new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{_jobName}/{number}-{cacheFileName}.json"));
             if (!d.Directory.Exists)
             {
                 d.Directory.Create();
             }
             return d;
         }
+        #endregion
 
         /// <summary>
         /// Info for a job

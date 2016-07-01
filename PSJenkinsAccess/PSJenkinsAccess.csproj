@@ -65,7 +65,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseJenkinsJob.cs" />
+    <Compile Include="BaseJobBuildCmdlet.cs" />
     <Compile Include="FindJenkinsJob.cs" />
+    <Compile Include="GetJobLogFile.cs" />
     <Compile Include="InvokeJenkinsJob.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

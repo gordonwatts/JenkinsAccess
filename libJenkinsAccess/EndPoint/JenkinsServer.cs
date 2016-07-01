@@ -58,6 +58,23 @@ namespace JenkinsAccess.EndPoint
             }
         }
 
+        /// <summary>
+        /// Fetch a string from the remote server.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        internal async Task<Either<Exception, string>> FetchData(Uri url)
+        {
+            try
+            {
+                return await _JenkinsEndPoint.Value.FetchData(url);
+            }
+            catch (Exception e)
+            {
+                return e;
+            }
+        }
+
 #if false
         /// <summary>
         /// Fetch the last successful build.
@@ -114,6 +131,6 @@ namespace JenkinsAccess.EndPoint
 
             await _JenkinsEndPoint.Value.DownloadFile(artifactUri, destination);
         }
-#endif 
+#endif
     }
 }
