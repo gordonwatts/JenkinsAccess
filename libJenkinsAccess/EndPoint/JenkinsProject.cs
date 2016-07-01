@@ -218,7 +218,9 @@ namespace JenkinsAccess.EndPoint
         /// <returns></returns>
         private FileInfo GetCacheFilename(int number, string cacheFileName)
         {
-            var d = new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{_jobName}/{number}-{cacheFileName}.json"));
+           var d = _jobName
+                .Match(s => new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{s}/{number}-{cacheFileName}.json")),
+                () => { throw new InvalidOperationException(); });
             if (!d.Directory.Exists)
             {
                 d.Directory.Create();
