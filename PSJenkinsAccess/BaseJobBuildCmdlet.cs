@@ -46,5 +46,11 @@ namespace PSJenkinsAccess
             }
             return _jobId;
         }
+
+        protected override void ProcessRecord()
+        {
+            _jobId = -1;
+            base.ProcessRecord();
+        }
     }
 }
