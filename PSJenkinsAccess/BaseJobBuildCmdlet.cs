@@ -14,7 +14,7 @@ namespace PSJenkinsAccess
     /// </summary>
     public class BaseJobBuildCmdlet : PSCmdlet
     {
-        [Parameter(HelpMessage = "The object from a Find-JenkinsJob", ValueFromPipeline =true)]
+        [Parameter(HelpMessage = "The object from a Find-JenkinsJob", Position = 1, ValueFromPipeline =true)]
         public JenkinsJobBuildInfo JobInfo { get; set; }
 
         private JenkinsProject _project = null;
