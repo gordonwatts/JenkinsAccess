@@ -18,11 +18,14 @@ namespace PSJenkinsAccess
     [Cmdlet(VerbsCommon.Find, "JenkinsJob")]
     public class FindJenkinsJob : BaseJenkinsJob
     {
-        [Parameter(HelpMessage ="Specify a job range, the minimum job of the range. Negative numbers are ok (back from current build). By default it is -50.")]
+        [Parameter(HelpMessage ="Specify a job range, the minimum job of the range. Negative numbers are ok (back from current build). By default it is -50.", ParameterSetName = "minmax")]
         public int? MinimumJobNumber { get; set; }
 
-        [Parameter(HelpMessage = "Specify a job range, the maximum job of the range. Negative numbers are ok (back from the current build number). Default is the current build number.")]
+        [Parameter(HelpMessage = "Specify a job range, the maximum job of the range. Negative numbers are ok (back from the current build number). Default is the current build number.", ParameterSetName = "minmax")]
         public int? MaximumJobNumber { get; set; }
+
+        [Parameter(HelpMessage = "Specify a specific job number", Position = 1, ParameterSetName = "specificJob")]
+        public int JobId { get; set; }
 
         /// <summary>
         /// Process the number of it.
@@ -31,7 +34,9 @@ namespace PSJenkinsAccess
         {
             // Get the range of job ID's to fetch. The most efficient thing to do is grab the last n (the default is 50
             // when this code was written.
-            var r = DetermineJobRange(Optional(MinimumJobNumber), Optional(MaximumJobNumber)).Result;
+            var r = ParameterSetName == "minmax"
+                ? DetermineJobRange(Optional(MinimumJobNumber), Optional(MaximumJobNumber)).Result
+                : Right<Exception, IEnumerable<int>>(new[] { JobId });
 
             // Next, loop over each item and fetch what we need. Or throw if something bad bubbled up.
             r
