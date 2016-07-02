@@ -14,9 +14,24 @@ namespace PSJenkinsAccess
     /// </summary>
     public class BaseJobBuildCmdlet : PSCmdlet
     {
-        [Parameter(HelpMessage = "The object from a Find-JenkinsJob", Position = 1, ValueFromPipeline =true)]
+        /// <summary>
+        /// Specifiy the job as a complete object. Contains everything we need.
+        /// </summary>
+        [Parameter(HelpMessage = "The object from a Find-JenkinsJob", Position = 1, Mandatory = true, ValueFromPipeline =true, ParameterSetName = "JobAsProperty")]
         public JenkinsJobBuildInfo JobInfo { get; set; }
 
+        [Parameter(HelpMessage = "Specify the build number", Position = 1, Mandatory = true, ValueFromPipeline = true, ParameterSetName = "JobAsIdUri")]
+        public int JobId { get; set; }
+
+        /// <summary>
+        /// The URI
+        /// </summary>
+        [Parameter(HelpMessage = "URI of the job web page", ParameterSetName = "JobAsIdUri", Mandatory = true)]
+        public string JobUri { get; set; }
+
+        /// <summary>
+        /// Cache the project. Not expected to change as we go.
+        /// </summary>
         private JenkinsProject _project = null;
 
         /// <summary>
@@ -27,12 +42,17 @@ namespace PSJenkinsAccess
         {
             if (_project == null)
             {
-                _project = new JenkinsProject(JobInfo.JobUrl);
+                if (ParameterSetName == "JobAsIdUri")
+                {
+                    _project = new JenkinsProject(new Uri(JobUri));
+                }
+                else
+                {
+                    _project = new JenkinsProject(JobInfo.JobUrl);
+                }
             }
             return _project;
         }
-
-        private int _jobId = -1;
 
         /// <summary>
         /// Extract the job from the parameters.
@@ -40,17 +60,14 @@ namespace PSJenkinsAccess
         /// <returns></returns>
         internal int GetJobId()
         {
-            if (_jobId <= 0)
+            if (ParameterSetName == "JobAsIdUri")
             {
-                _jobId = JobInfo.Id;
+                return JobId;
             }
-            return _jobId;
-        }
-
-        protected override void ProcessRecord()
-        {
-            _jobId = -1;
-            base.ProcessRecord();
+            else
+            {
+                return JobInfo.Id;
+            }
         }
     }
 }
