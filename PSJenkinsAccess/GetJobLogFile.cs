@@ -17,7 +17,7 @@ namespace PSJenkinsAccess
         {
             GetJenkinsProject().GetJobLogfile(GetJobId())
                 .Result
-                .Right(v => WriteObject(v))
+                .Right(v => { foreach (var l in v.Replace("\r\n", "\n").Split('\n')) { WriteObject(l); } })
                 .Left(e => { throw e; });
 
             base.ProcessRecord();
