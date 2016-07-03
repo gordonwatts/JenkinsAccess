@@ -126,6 +126,7 @@ namespace JenkinsAccess.EndPoint
                     Id = jvi.number,
                     IsBuilding = jvi.building,
                     Parameters = ConvertParameters(jvi.actions),
+                    Status = jvi.result,
                     JobUrl = new Uri(jvi.url)
                 });
         }
@@ -248,6 +249,11 @@ namespace JenkinsAccess.EndPoint
             /// The parameter key/value pairs. They are all strings.
             /// </summary>
             public Hashtable Parameters { get; internal set; }
+
+            /// <summary>
+            /// The final status of the Jenkins job.
+            /// </summary>
+            public string Status { get; internal set; }
         }
 
         /// <summary>
