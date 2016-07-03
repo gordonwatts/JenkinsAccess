@@ -27,7 +27,10 @@ namespace PSJenkinsAccess
         [Parameter(HelpMessage = "Specify a specific job number", Position = 1, ParameterSetName = "specificJob")]
         public int JobId { get; set; }
 
-        [Parameter(HelpMessage = "What state is the job in?")]
+        /// <summary>
+        /// This parameter makes no sense if you are requesting a specific job - only when fetching a range.
+        /// </summary>
+        [Parameter(HelpMessage = "What state is the job in?", ParameterSetName = "minmax")]
         public JobStateValue? JobState { get; set; }
 
         /// <summary>
