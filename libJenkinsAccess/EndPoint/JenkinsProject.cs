@@ -135,12 +135,13 @@ namespace JenkinsAccess.EndPoint
         /// </summary>
         /// <param name="actions"></param>
         /// <returns></returns>
-        private Dictionary<string, string> ConvertParameters(List<Data.Action> actions)
+        private Hashtable ConvertParameters(List<Data.Action> actions)
         {
             return actions
                 .Where(a => a.parameters != null)
                 .SelectMany(a => a.parameters)
-                .ToDictionary(p => p.name, p => p.value);
+                .ToDictionary(p => p.name, p => p.value)
+                .ToHashtable();
         }
 
         /// <summary>
@@ -230,8 +231,9 @@ namespace JenkinsAccess.EndPoint
         #endregion
 
         /// <summary>
-        /// Info for a job
+        /// Info for a job.
         /// </summary>
+        /// <remarks>This is designed to be a PowerShell friendly object.</remarks>
         public class JenkinsJobBuildInfo
         {
             public int Id { get; internal set; }
@@ -241,7 +243,11 @@ namespace JenkinsAccess.EndPoint
             /// Url pointing to the job.
             /// </summary>
             public Uri JobUrl { get; internal set; }
-            public Dictionary<string, string> Parameters { get; internal set; }
+
+            /// <summary>
+            /// The parameter key/value pairs. They are all strings.
+            /// </summary>
+            public Hashtable Parameters { get; internal set; }
         }
 
         /// <summary>
