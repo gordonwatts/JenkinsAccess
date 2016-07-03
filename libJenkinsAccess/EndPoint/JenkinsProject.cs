@@ -127,6 +127,7 @@ namespace JenkinsAccess.EndPoint
                     IsBuilding = jvi.building,
                     Parameters = ConvertParameters(jvi.actions),
                     Status = jvi.result,
+                    Changes = jvi.changeSet.items.Count != 0,
                     JobUrl = new Uri(jvi.url)
                 });
         }
@@ -221,7 +222,7 @@ namespace JenkinsAccess.EndPoint
         private FileInfo GetCacheFilename(int number, string cacheFileName)
         {
            var d = _jobName
-                .Match(s => new FileInfo(Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"JenkinsCache/{s}/{number}-{cacheFileName}.json")),
+                .Match(s => new FileInfo(Path.Combine(Path.GetTempPath(), $"JenkinsCache/{s}/{number}-{cacheFileName}.json")),
                 () => { throw new InvalidOperationException(); });
             if (!d.Directory.Exists)
             {
@@ -254,6 +255,11 @@ namespace JenkinsAccess.EndPoint
             /// The final status of the Jenkins job.
             /// </summary>
             public string Status { get; internal set; }
+
+            /// <summary>
+            /// True if there were changes made to the source code being built.
+            /// </summary>
+            public bool Changes { get; internal set; }
         }
 
         /// <summary>
