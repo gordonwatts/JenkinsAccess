@@ -27,6 +27,9 @@ namespace PSJenkinsAccess
         [Parameter(HelpMessage = "Specify a specific job number", Position = 1, ParameterSetName = "specificJob")]
         public int JobId { get; set; }
 
+        [Parameter(HelpMessage = "What state is the job in?")]
+        public JobStateValue? JobState { get; set; }
+
         /// <summary>
         /// Process the number of it.
         /// </summary>
@@ -42,11 +45,30 @@ namespace PSJenkinsAccess
             r
                 .Right(lst => lst.Select(jid => GetJenkinsProject().GetJobBuildInfo(jid)))
                 .Left(e => { throw e; })
+                .Filter(i => i.Result.Match(j => MatchJob(j), e => false))
                 .Iter(i => i.Result
                             .Match(Right: ji => WriteObject(ji), Left: e => { throw e; }));
 
             // Make sure that PS does its thing.
             base.ProcessRecord();
+        }
+
+        /// <summary>
+        /// Make sure all filters are applied
+        /// </summary>
+        /// <param name="j"></param>
+        /// <returns></returns>
+        private bool MatchJob(JenkinsJobBuildInfo j)
+        {
+            if (JobState.HasValue)
+            {
+                if (JobState.Value != j.JobState)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

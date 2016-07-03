@@ -128,6 +128,11 @@ namespace JenkinsAccess.EndPoint
                     Parameters = ConvertParameters(jvi.actions),
                     Status = jvi.result,
                     Changes = jvi.changeSet.items.Count != 0,
+                    JobState = jvi.building
+                                ? JobStateValue.Running
+                                : jvi.result == "SUCCESS"
+                                ? JobStateValue.Success
+                                : JobStateValue.Failure,
                     JobUrl = new Uri(jvi.url)
                 });
         }
@@ -233,6 +238,16 @@ namespace JenkinsAccess.EndPoint
         #endregion
 
         /// <summary>
+        /// Current state of the job.
+        /// </summary>
+        public enum JobStateValue
+        {
+            Success,
+            Failure,
+            Running
+        }
+
+        /// <summary>
         /// Info for a job.
         /// </summary>
         /// <remarks>This is designed to be a PowerShell friendly object.</remarks>
@@ -260,6 +275,11 @@ namespace JenkinsAccess.EndPoint
             /// True if there were changes made to the source code being built.
             /// </summary>
             public bool Changes { get; internal set; }
+
+            /// <summary>
+            /// The current state of the job
+            /// </summary>
+            public JobStateValue JobState { get; internal set; }
         }
 
         /// <summary>
