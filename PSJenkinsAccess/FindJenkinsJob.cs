@@ -15,7 +15,7 @@ namespace PSJenkinsAccess
     /// Search the Jenkins job log for a particular job or sequence of jobs. The
     /// job object (which contains parameters, id, status) is written to the output.
     /// </summary>
-    [Cmdlet(VerbsCommon.Find, "JenkinsJob")]
+    [Cmdlet(VerbsCommon.Find, "JenkinsJob", DefaultParameterSetName ="minmax")]
     public class FindJenkinsJob : BaseJenkinsJob
     {
         [Parameter(HelpMessage ="Specify a job range, the minimum job of the range. Negative numbers are ok (back from current build). By default it is -50.", ParameterSetName = "minmax")]
