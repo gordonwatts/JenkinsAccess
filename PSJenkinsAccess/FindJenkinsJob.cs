@@ -27,6 +27,9 @@ namespace PSJenkinsAccess
         [Parameter(HelpMessage = "Specify a specific job number", Position = 1, ParameterSetName = "specificJob")]
         public int JobId { get; set; }
 
+        [Parameter(HelpMessage = "Any job that has been rebuilt by another job in the range will be dropped", ParameterSetName = "minmax")]
+        public SwitchParameter ExcludeRebuiltJobs { get; set; }
+
         /// <summary>
         /// This parameter makes no sense if you are requesting a specific job - only when fetching a range.
         /// </summary>
@@ -40,15 +43,29 @@ namespace PSJenkinsAccess
         {
             // Get the range of job ID's to fetch. The most efficient thing to do is grab the last n (the default is 50
             // when this code was written.
-            var r = ParameterSetName == "minmax"
+            var r = (ParameterSetName == "minmax"
                 ? DetermineJobRange(Optional(MinimumJobNumber), Optional(MaximumJobNumber)).Result
-                : Right<Exception, IEnumerable<int>>(new[] { JobId });
+                : Right<Exception, IEnumerable<int>>(new[] { JobId }))
+                .Right(lst => lst)
+                .Left(e => { throw e; })
+                .ToArray();
+
+            // If we need to exclude jobs that are rebuilt, this requires a double scan. Good thing
+            // everything is cached!
+            var rebuiltBuilds = new HashSet<int>(ExcludeRebuiltJobs.IsPresent
+                ? r
+                    .Select(jid => GetJenkinsProject().GetJobBuildInfo(jid))
+                    .Filter(i => i.Result.Match(j => j.RebuildsJob.HasValue, e => false))
+                    .Map(i => i.Result.Match(j => j.RebuildsJob, e => null))
+                    .Where(i => i.HasValue)
+                    .Select(i => i.Value)
+                    .ToArray()
+                : new int[] { });
 
             // Next, loop over each item and fetch what we need. Or throw if something bad bubbled up.
             r
-                .Right(lst => lst.Select(jid => GetJenkinsProject().GetJobBuildInfo(jid)))
-                .Left(e => { throw e; })
-                .Filter(i => i.Result.Match(j => MatchJob(j), e => false))
+                .Select(jid => GetJenkinsProject().GetJobBuildInfo(jid))
+                .Filter(i => i.Result.Match(j => MatchJob(j) && !rebuiltBuilds.Contains(j.Id), e => false))
                 .Iter(i => i.Result
                             .Match(Right: ji => WriteObject(ji), Left: e => { throw e; }));
 

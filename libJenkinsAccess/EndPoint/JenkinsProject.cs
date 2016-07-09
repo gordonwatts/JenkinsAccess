@@ -133,7 +133,8 @@ namespace JenkinsAccess.EndPoint
                                 : jvi.result == "SUCCESS"
                                 ? JobStateValue.Success
                                 : JobStateValue.Failure,
-                    JobUrl = new Uri(jvi.url)
+                    JobUrl = new Uri(jvi.url),
+                    RebuildsJob = jvi.actions.Where(a => a?.causes != null).SelectMany(a => a?.causes).Where(c => c?.upstreamBuild != null).Select(c => c.upstreamBuild).FirstOrDefault()
                 });
         }
 
@@ -280,6 +281,11 @@ namespace JenkinsAccess.EndPoint
             /// The current state of the job
             /// </summary>
             public JobStateValue JobState { get; internal set; }
+
+            /// <summary>
+            /// If set, points to the job number that this job is rebuilding
+            /// </summary>
+            public int? RebuildsJob { get; internal set; }
         }
 
         /// <summary>
