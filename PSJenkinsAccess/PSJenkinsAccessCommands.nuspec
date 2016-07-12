@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSJenkinsAccessCommands</id>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <title>Jenkins Powershell Access Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
