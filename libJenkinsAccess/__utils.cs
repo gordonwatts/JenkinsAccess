@@ -1,5 +1,6 @@
 ﻿using LanguageExt;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,36 @@ namespace JenkinsAccess
                 .FirstOrDefault()
                 )
                 .Map(s => s.Trim('/'));
+        }
+
+        /// <summary>
+        /// Given a hash table, create a dict of strings.
+        /// </summary>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> ToDictionary(this Hashtable h)
+        {
+            var r = new Dictionary<string, string>();
+            foreach (var k in h.Keys)
+            {
+                r[k as string] = h[k] as string;
+            }
+
+            return r;
+        }
+
+        /// <summary>
+        /// Given a URI pointing at somethign job releated, get out the job only URI.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <returns></returns>
+        public static Uri RemoveBuildReference (this Uri original)
+        {
+            var jname = original.Segments.SkipWhile(j => j != "job/").Skip(1).FirstOrDefault();
+            if (jname == null)
+                return original;
+
+            return new Uri(original.OriginalString.Substring(0, original.OriginalString.IndexOf(jname) + jname.Length));
         }
     }
 }

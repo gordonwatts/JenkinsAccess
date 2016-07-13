@@ -64,14 +64,17 @@ namespace JenkinsAccess.EndPoint
         /// </summary>
         /// <param name="jobUri"></param>
         /// <returns></returns>
-        internal async Task Post (Uri jobUri, IDictionary<string,string> parameters)
+        internal async Task Post (Uri jobUri, IDictionary<string,string> parameters = null)
         {
             var wc = PreparseWebClient(jobUri);
 
             var nv = new System.Collections.Specialized.NameValueCollection();
-            foreach (var nvpair in parameters)
+            if (parameters != null)
             {
-                nv.Add(nvpair.Key, nvpair.Value);
+                foreach (var nvpair in parameters)
+                {
+                    nv.Add(nvpair.Key, nvpair.Value);
+                }
             }
             var result = await wc.UploadValuesTaskAsync(jobUri, nv);
         }

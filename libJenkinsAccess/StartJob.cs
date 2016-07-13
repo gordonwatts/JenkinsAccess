@@ -27,5 +27,18 @@ namespace JenkinsAccess
             var wca = new WebClientAccess();
             await wca.Post(invokeBuildURI, parameters);
         }
+
+        /// <summary>
+        /// Submit a job for re-build.
+        /// </summary>
+        /// <param name="buildUri">The URI for the specific build we want to re-start</param>
+        /// <param name="jobId"></param>
+        /// <returns></returns>
+        public static async Task RebuildJenkinsJob (Uri buildUri)
+        {
+            var reInvokeUri = new Uri(buildUri, "rebuild");
+            var wca = new WebClientAccess();
+            var r = await wca.FetchData(reInvokeUri);
+        }
     }
 }
