@@ -26,6 +26,10 @@ namespace JenkinsAccess.EndPoint
         public JenkinsServer(Uri url)
         {
             var goodSegment = url.Segments.SkipWhile(s => s != "job/").Count();
+            if (!url.Segments.Last().EndsWith("/"))
+            {
+                goodSegment--;
+            }
             var backup = Enumerable.Range(0, goodSegment).Aggregate("", (a, v) => a + "../");
             _serverUri = new Uri(url, backup);
         }
