@@ -127,7 +127,7 @@ namespace PSJenkinsAccess
         /// <returns></returns>
         private static async Task<Either<Exception, int>> NormalizeJobIndex(int j, Lazy<Task<Either<Exception, int>>> currentJob)
         {
-            return j > 0 ? j : (await currentJob.Value).Map(cj => cj + j);
+            return j > 0 ? j : (await currentJob.Value).Map(cj => cj + j > 1 ? cj + j : 1);
         }
     }
 }
