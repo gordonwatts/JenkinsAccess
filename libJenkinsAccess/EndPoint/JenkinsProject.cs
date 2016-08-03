@@ -98,6 +98,28 @@ namespace JenkinsAccess.EndPoint
         }
         #endregion
 
+        #region Artifacts
+        /// <summary>
+        /// Fetch an artifact from Jenkins and download locally
+        /// </summary>
+        /// <param name="artifactName"></param>
+        /// <returns></returns>
+        public Task<Either<Exception,FileInfo>> GetArtifact(int jobID, string artifactName)
+        {
+            var cacheFile = GetCacheFilename(jobID, artifactName);
+            if (!cacheFile.Exists)
+            {
+                // Fetch it.
+                var output = GetJobURIStem()
+                    .Some(v => _server.DownlaodData(new Uri($"{v.AbsoluteUri}/{jobID}/artifact/{artifactName}"), cacheFile))
+                    .None(() => Left<Exception, FileInfo>(new InvalidOperationException("No job url - should never happen.")).AsTask());
+                return output;
+            }
+
+            return Right<Exception, FileInfo>(cacheFile).AsTask();
+        }
+        #endregion
+
         #region BuildInfo cache file
         /// <summary>
         /// Fetch from the server the info needed.

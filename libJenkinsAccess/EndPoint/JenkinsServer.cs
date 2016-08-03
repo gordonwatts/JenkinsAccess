@@ -78,6 +78,25 @@ namespace JenkinsAccess.EndPoint
                 return e;
             }
         }
+        
+        /// <summary>
+        /// Downlaod data to a local file.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        internal async Task<Either<Exception, FileInfo>> DownlaodData (Uri url, FileInfo destination)
+        {
+            try
+            {
+                await _JenkinsEndPoint.Value.DownloadFile(url, destination);
+                return destination;
+            }
+            catch (Exception e)
+            {
+                return e;
+            }
+        }
 
 #if false
         /// <summary>

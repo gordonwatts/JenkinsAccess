@@ -20,6 +20,9 @@ namespace PSJenkinsAccess
         [Parameter(HelpMessage = "The object from a Find-JenkinsJob", Position = 1, Mandatory = true, ValueFromPipeline =true, ParameterSetName = "JobAsProperty")]
         public JenkinsJobBuildInfo JobInfo { get; set; }
 
+        /// <summary>
+        /// The build number for the particular job we are looking at.
+        /// </summary>
         [Parameter(HelpMessage = "Specify the build number", Position = 1, Mandatory = true, ValueFromPipeline = true, ParameterSetName = "JobAsIdUri")]
         public int JobId { get; set; }
 
