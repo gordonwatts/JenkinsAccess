@@ -113,7 +113,8 @@ namespace JenkinsAccess.EndPoint
                 var output = GetJobURIStem()
                     .Some(v => _server.DownlaodData(new Uri($"{v.AbsoluteUri}/{jobID}/artifact/{artifactName}"), cacheFile))
                     .None(() => Left<Exception, FileInfo>(new InvalidOperationException("No job url - should never happen.")).AsTask());
-                return output;
+                return output
+                    .Map(v => v.Map(af => { af.Refresh(); return af; }));
             }
 
             return Right<Exception, FileInfo>(cacheFile).AsTask();
@@ -250,9 +251,9 @@ namespace JenkinsAccess.EndPoint
         private FileInfo GetCacheFilename(int number, string cacheFileName)
         {
             var extension = cacheFileName.Contains(".") ? "" : ".json";
-           var d = _jobName
-                .Match(s => new FileInfo(Path.Combine(Path.GetTempPath(), $"JenkinsCache/{s}/{number}-{cacheFileName}{extension}")),
-                () => { throw new InvalidOperationException(); });
+            var d = _jobName
+                 .Match(s => new FileInfo(Path.Combine(Path.GetTempPath(), $"JenkinsCache/{s}/{number}-{cacheFileName}{extension}")),
+                 () => { throw new InvalidOperationException(); });
             if (!d.Directory.Exists)
             {
                 d.Directory.Create();
