@@ -121,13 +121,28 @@ namespace JenkinsAccess.EndPoint
             // Do the download.
             var wc = PreparseWebClient(artifactUri);
 
+            bool gotFile = false;
             try
             {
                 await wc.DownloadFileTaskAsync(artifactUri, destination.FullName);
+                gotFile = true;
             }
             catch (WebException e) when (e.Message.Contains("Forbidden"))
             {
                 throw new ArgumentException($"Jenkins Server seems to require log-in credentials, but we did not find any on this machine that worked. Create a generic credential with '{artifactUri.Host}' as the target.", e);
+            }
+            finally
+            {
+                if (!gotFile)
+                {
+                    // Clean up if a partial file has been left behind.
+                    destination.Refresh();
+                    if (destination.Exists)
+                    {
+                        destination.Delete();
+                        destination.Refresh();
+                    }
+                }
             }
         }
     }
