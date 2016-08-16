@@ -157,7 +157,8 @@ namespace JenkinsAccess.EndPoint
                                 ? JobStateValue.Success
                                 : JobStateValue.Failure,
                     JobUrl = new Uri(jvi.url),
-                    RebuildsJob = jvi.actions.Where(a => a?.causes != null).SelectMany(a => a?.causes).Where(c => c?.upstreamBuild != null).Select(c => c.upstreamBuild).FirstOrDefault()
+                    RebuildsJob = jvi.actions.Where(a => a?.causes != null).SelectMany(a => a?.causes).Where(c => c?.upstreamBuild != null).Select(c => c.upstreamBuild).FirstOrDefault(),
+                    Artifacts = jvi.artifacts.Select(a => a.relativePath).ToArray(),
                 });
         }
 
@@ -310,6 +311,11 @@ namespace JenkinsAccess.EndPoint
             /// If set, points to the job number that this job is rebuilding
             /// </summary>
             public int? RebuildsJob { get; internal set; }
+
+            /// <summary>
+            /// A list of artifact path names
+            /// </summary>
+            public string[] Artifacts { get; internal set; }
         }
 
         /// <summary>
