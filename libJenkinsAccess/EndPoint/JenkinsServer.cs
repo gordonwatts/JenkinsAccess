@@ -25,7 +25,7 @@ namespace JenkinsAccess.EndPoint
         /// <param name="url"></param>
         public JenkinsServer(Uri url)
         {
-            var goodSegment = url.Segments.SkipWhile(s => s != "job/").Count();
+            var goodSegment = url.Segments.SkipUntilLast(s => s == "job/").Count();
             if (!url.Segments.Last().EndsWith("/"))
             {
                 goodSegment--;

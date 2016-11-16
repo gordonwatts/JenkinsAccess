@@ -15,6 +15,28 @@ namespace JenkinsAccess
     public static class __utils
     {
         /// <summary>
+        /// Skip all items in a sequence until the last one that satisfies test. Then return that item along with
+        /// everything else after it till the end of the sequence. WARNING: this must cache the sequence!
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="test"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> SkipUntilLast<T>(this IEnumerable<T> source, Func<T,bool> test)
+        {
+            var list = new List<T>();
+            foreach (var item in source)
+            {
+                if (test(item))
+                {
+                    list.Clear();
+                }
+                list.Add(item);
+            }
+            return list;
+        }
+
+        /// <summary>
         /// Gets a job name, which comes on the item after the "job" in the name.
         /// </summary>
         /// <param name="jobUri"></param>
@@ -24,7 +46,7 @@ namespace JenkinsAccess
             return Optional(
                 jobUri
                 .Segments
-                .SkipWhile(seg => seg != "job/")
+                .SkipUntilLast(seg => seg == "job/")
                 .Skip(1)
                 .FirstOrDefault()
                 )
