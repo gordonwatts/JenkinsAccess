@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>PSJenkinsAccessCommands</id>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
     <title>Jenkins Powershell Access Commands</title>
     <authors>Gordon Watts</authors>
     <owners>Gordon Watts</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/gordonwatts/JenkinsAccess</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A PowerShell module that adds commands that allows you get fetch job status and log files from a Jenkins server. Jenkins built-in authentication is supported through Windows credentials.</description>
-    <releaseNotes>Can now list artifacts in a job</releaseNotes>
+    <releaseNotes>Update to deal with folder structure in Jenkins</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>Jenkins PowerShell</tags>
     <dependencies></dependencies>
