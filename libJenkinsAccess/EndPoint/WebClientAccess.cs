@@ -64,9 +64,17 @@ namespace JenkinsAccess.EndPoint
         /// </summary>
         /// <param name="jobUri"></param>
         /// <returns></returns>
-        internal async Task Post (Uri jobUri, IDictionary<string,string> parameters = null)
+        internal async Task Post (Uri jobUri, IDictionary<string,string> parameters = null, (string k, string v)[] headers = null)
         {
             var wc = PreparseWebClient(jobUri);
+
+            if (headers != null)
+            {
+                foreach (var h in headers)
+                {
+                    wc.Headers.Add(h.k, h.v);
+                }
+            }
 
             var nv = new System.Collections.Specialized.NameValueCollection();
             if (parameters != null)
