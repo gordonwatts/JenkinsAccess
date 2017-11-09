@@ -23,7 +23,7 @@ namespace PSJenkinsAccess
         /// <summary>
         /// And the parameters to invoke with
         /// </summary>
-        [Parameter(Mandatory = true, Position = 2, ValueFromPipeline = true, ParameterSetName = "ExplicitParams")]
+        [Parameter(Mandatory = false, Position = 2, ValueFromPipeline = true, ParameterSetName = "ExplicitParams")]
         public Hashtable ParameterValues { get; set; }
 
         /// <summary>
