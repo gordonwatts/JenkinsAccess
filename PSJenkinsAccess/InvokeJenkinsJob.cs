@@ -44,6 +44,14 @@ namespace PSJenkinsAccess
                             ? new Dictionary<string, string>()
                             : ParameterValues.Keys.Cast<string>().ToDictionary(k => k, k => (string)ParameterValues[k]))
                     : JobInfo.Parameters.ToDictionary();
+
+                // The job uri should always end with a "/".
+                if (!JobUri.EndsWith("/"))
+                {
+                    JobUri += "/";
+                }
+
+                // Run the job!
                 StartJob.StartJenkinsJob(new Uri(ParameterSetName == "ExplicitParams" ? JobUri : JobInfo.JobUrl.RemoveBuildReference().OriginalString), dict).Wait();
             } catch (AggregateException e)
             {
